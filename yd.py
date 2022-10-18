@@ -1,32 +1,38 @@
-from socket import *
-from tkinter import *
-import tkinter
+from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, QPlainTextEdit, QMessageBox
+import socket
 
-def client():
-    IP = '10.128.36.75'
-    SERVER_PORT = 50000
-    BUFLEN = 1024
 
-    dataSocket = socket(AF_INET, SOCK_STREAM)
-
-    dataSocket.connect((IP, SERVER_PORT))
+def handleCalc():
+    mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    mysock.connect(('10.20.133.78', 80))
+    cmd = 'GET http://10.20.133.78/romeo.txt HTTP/1.0\r\n\r\n'.encode()
+    mysock.send(cmd)
 
     while True:
-        toSend = input('>>>')
-        if toSend == 'exit':
+        data = mysock.recv(512)
+        if (len(data) < 1):
             break
-        dataSocket.send(toSend.encode())
+        # print(data.decode(), end='')
+        textEdit.appendPlainText(data.decode())
+        # QMessageBox.about(window,a)
+    mysock.close()
 
-        receved = dataSocket.recv(BUFLEN)
-        if not receved:
-            break
-        print(receved.decode())
 
-    dataSocket.close()
-window =tkinter.Tk()
-window.title('clientOperation')
-window.geometry('1000x200')
+app = QApplication([])
+window = QMainWindow()
+window.resize(500, 400)
+window.move(300, 310)
+window.setWindowTitle('socket')
 
-button=tkinter.Button(window,text='在客户机操作',bg='#CC33CC', command=lambda : client())
-button.pack()
-top=mainloop()
+textEdit = QPlainTextEdit(window)
+textEdit.setPlaceholderText("请输入内容")
+textEdit.move(10, 25)
+textEdit.resize(300, 350)
+
+button = QPushButton('显示', window)
+button.move(380, 80)
+window.show()
+
+button.clicked.connect(handleCalc)
+
+app.exec_()
